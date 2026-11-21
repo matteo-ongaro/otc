@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0f14">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<title>OTC · One Time Communication</title>
+<style>
+:root {
+  --bg: #0c0f14; --panel: #141922; --line: #232b38; --text: #e8edf4; --mute: #8b96a8;
+  --accent: #6df0b3; --accent-ink: #04261a; --danger: #ff8a8a; --me: #18382f; --them: #1a212c;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.screen { height: 100dvh; display: flex; flex-direction: column; }
+.center { align-items: center; justify-content: center; text-align: center; padding: 24px; gap: 14px; }
+
+.brand { font: 700 15px ui-monospace, Menlo, Consolas, monospace; letter-spacing: .28em; color: var(--accent);
+  display: flex; align-items: center; gap: 10px; }
+.brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); animation: pulse 2.4s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+/* Home */
+.home { padding: 28px 22px calc(28px + env(safe-area-inset-bottom)); max-width: 440px; margin: 0 auto; width: 100%; overflow-y: auto; }
+.home h1 { font-size: 30px; line-height: 1.1; margin: 18px 0 10px; letter-spacing: -.02em; }
+.lead { color: var(--mute); margin: 0 0 22px; }
+form { display: flex; flex-direction: column; gap: 14px; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--mute); letter-spacing: .04em; text-transform: uppercase; }
+input, textarea { background: var(--panel); border: 1px solid var(--line); color: var(--text); border-radius: 12px;
+  padding: 13px 14px; font: inherit; font-size: 16px; width: 100%; outline: none; text-transform: none; letter-spacing: normal; }
+input:focus, textarea:focus { border-color: var(--accent); }
+#code { letter-spacing: .12em; text-transform: uppercase; }
+.row { display: flex; gap: 8px; }
+button { font: inherit; font-weight: 600; border-radius: 12px; padding: 13px 18px; cursor: pointer; border: 1px solid transparent; }
+button:disabled { opacity: .45; cursor: default; }
+.primary { background: var(--accent); color: var(--accent-ink); }
+.ghost { background: transparent; border-color: var(--line); color: var(--text); }
+.outline { background: transparent; border-color: var(--accent); color: var(--accent); padding: 9px 14px; }
+.link { background: none; border: 0; color: var(--mute); text-decoration: underline; font-weight: 400; }
+.btn { display: inline-block; text-decoration: none; text-align: center; font-weight: 600; border-radius: 12px; padding: 13px 18px; border: 1px solid var(--line); color: var(--text); }
+.error { color: var(--danger); min-height: 1.4em; margin: 0; font-size: 14px; }
+.notes { color: var(--mute); font-size: 14px; padding-left: 18px; margin: 18px 0 0; }
+.notes li { margin: 6px 0; }
+
+/* Attesa */
+.bigcode { font-size: clamp(30px, 10vw, 46px); letter-spacing: .1em; font-weight: 700; color: var(--accent); user-select: all; }
+.label { margin: 0; color: var(--mute); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+.status { color: var(--mute); display: flex; align-items: center; gap: 10px; margin: 8px 0 0; max-width: 340px; }
+.spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: spin 1s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Chat */
+.chat header { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 14px 10px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.who { display: flex; align-items: center; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.who strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40vw; }
+.presence { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
+.badge { font: 600 11px ui-monospace, Menlo, Consolas, monospace; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--mute); }
+.badge[data-mode="p2p"] { color: var(--accent); border-color: var(--accent); }
+.log { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.bubble { max-width: 82%; padding: 9px 12px 6px; border-radius: 16px; background: var(--them); align-self: flex-start; border-bottom-left-radius: 4px; }
+.bubble.me { background: var(--me); align-self: flex-end; border-bottom-left-radius: 16px; border-bottom-right-radius: 4px; }
+.bubble .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.bubble .meta { font-size: 11px; color: var(--mute); margin-top: 2px; }
+.bubble.failed { outline: 1px solid var(--danger); }
+.note { align-self: center; text-align: center; color: var(--mute); font-size: 12.5px; max-width: 90%; padding: 4px 0; }
+.composer { flex-direction: row; align-items: flex-end; gap: 8px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: var(--panel); }
+.composer textarea { resize: none; max-height: 120px; border-radius: 14px; }
+.banner { position: fixed; top: 0; left: 0; right: 0; z-index: 20; background: #4a3b12; color: #ffe3a0; text-align: center; font-size: 13px; padding: 6px; }
+
+/* Overlay */
+.overlay { position: fixed; inset: 0; z-index: 10; background: rgba(5, 8, 12, .78); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(3px); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px; max-width: 400px; width: 100%; }
+.card h3 { margin: 0 0 8px; font-size: 19px; }
+.card p { margin: 0 0 18px; color: var(--mute); }
+.actions { display: flex; flex-direction: column; gap: 10px; }
+
+/* Fine */
+.check { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 34px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+#done-text { color: var(--mute); max-width: 360px; margin: 0; }
+#done-fp { color: var(--accent); margin: 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div id="banner" class="banner" hidden></div>
+
+<main id="screen-home" class="screen home">
+  <div class="brand"><span class="dot"></span>OTC</div>
+  <h1>One Time<br>Communication</h1>
+  <p class="lead">Una chat a due, cifrata end-to-end, senza account e senza cronologia sul server. Alla fine: un PDF per ciascuno e tutto cancellato.</p>
+  <form id="join-form" autocomplete="off">
+    <label>Nome
+      <input id="nick" maxlength="24" placeholder="Come ti chiami?" autocomplete="off">
+    </label>
+    <label>Codice
+      <div class="row">
+        <input id="code" class="mono" maxlength="24" placeholder="XXXX-XXXX" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button type="button" id="gen" class="ghost">Genera</button>
+      </div>
+    </label>
+    <button id="join-btn" class="primary" type="submit">Entra</button>
+    <p id="home-error" class="error" role="alert"></p>
+  </form>
+  <ul class="notes">
+    <li>Uno genera il codice e lo passa all'altro (a voce o su un altro canale). L'altro lo scrive qui.</li>
+    <li>Il codice vale per una sola chat e scade dopo 3 minuti se nessuno entra.</li>
+    <li>I messaggi sono cifrati con una chiave ricavata dal codice: il server non può leggerli.</li>
+  </ul>
+</main>
+
+<main id="screen-wait" class="screen center" hidden>
+  <div class="brand"><span class="dot"></span>OTC</div>
+  <p class="label">Il vostro codice</p>
+  <div id="wait-code" class="bigcode mono"></div>
+  <button id="copy" class="ghost" type="button">Copia codice</button>
+  <p class="status"><span class="spinner"></span><span id="wait-status"></span></p>
+  <button id="cancel" class="link" type="button">Annulla</button>
+</main>
+
+<main id="screen-chat" class="screen chat" hidden>
+  <header>
+    <div class="who">
+      <span class="presence"></span>
+      <strong id="peer-name"></strong>
+      <span id="transport" class="badge" data-mode="relay">Relay cifrato</span>
+    </div>
+    <button id="end-btn" class="outline" type="button">Concludi</button>
+  </header>
+  <div id="log" class="log" aria-live="polite"></div>
+  <form id="composer" class="composer" style="display:flex">
+    <textarea id="msg" rows="1" maxlength="2000" placeholder="Scrivi un messaggio…" enterkeyhint="send" autocomplete="off"></textarea>
+    <button id="send" class="primary" type="submit">Invia</button>
+  </form>
+</main>
+
+<main id="screen-done" class="screen center" hidden>
+  <div id="done-icon" class="check">✓</div>
+  <h2 id="done-title"></h2>
+  <p id="done-text"></p>
+  <p id="done-fp" class="mono"></p>
+  <a id="done-dl" class="btn" hidden>Scarica di nuovo il PDF</a>
+  <button id="again" class="primary" type="button">Nuova chat</button>
+</main>
+
+<div id="overlay" class="overlay" hidden>
+  <div class="card">
+    <h3 id="ov-title"></h3>
+    <p id="ov-text"></p>
+    <div id="ov-actions" class="actions"></div>
+  </div>
+</div>
+
+<script src="/otc-lib.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
